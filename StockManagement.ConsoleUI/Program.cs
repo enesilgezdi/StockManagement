@@ -72,7 +72,10 @@ using StockManagement.ConsoleUI.Service;
 
 //productService.GetAll();
 
-CategoryService categoryService = new CategoryService();
+//CategoryService categoryService = new CategoryService();
+
+ProductService productService = new ProductService();
+productService.GetDetailById(new Guid("{3BED90AE-FA0A-4ECE-959B-3A5D804E4471}"));
 
 //Category newCategory = new Category(5, "Yeni Kategori", "Yeni Kategori Açıklaması");
 

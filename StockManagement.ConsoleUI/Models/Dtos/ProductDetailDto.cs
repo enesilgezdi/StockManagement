@@ -2,7 +2,7 @@
 namespace StockManagement.ConsoleUI.Models.Dtos
 {
     public record ProductDetailDto(
-    int Id,
+    Guid Id,
     string categoryName,
     string Name,
     double Price,

@@ -1,24 +1,21 @@
-﻿
-
-using StockManagement.ConsoleUI.Models;
+﻿using StockManagement.ConsoleUI.Models;
 using StockManagement.ConsoleUI.Models.Dtos;
+using StockManagement.ConsoleUI.Service;
 
 namespace StockManagement.ConsoleUI.Data;
 
-internal class ProductData
+public sealed class ProductData : BaseRepository, IProductData
 {
-
-    List<Product> products = new List<Product>()
+    List<Product> products()
     {
-    new Product(1,1,"Beymen Takım Elbise",15000,250),
-    new Product(2,1,"Prada Çanta",60000,10),
-    new Product(3,2,"Hk Vision Drone",400000,25),
-    new Product(4,2,"Dyson Süpürge",32000,200),
-    new Product(5,3,"Karaca Vazo",500,1000),
-    new Product(6,3,"Kütahya Porselen Ayna",1500,200),
-    new Product(7,4, "Adidas Futbol Topu",5000,1254),
-    new Product(8,4,"Delta Yoga Matı",2000,531)
-    };
+        return Products();
+    }
+
+    List<Category> categories()
+    {
+        return Categories();
+    }
+
 
     //List<Category> categories = new List<Category>()
     // {
@@ -31,65 +28,64 @@ internal class ProductData
 
     public Product Add(Product product)
     {
-        products.Add(product);
+        products().Add(product);
         return product;
     }
 
     public double TotalProductPriceSum()
     {
-        double total = products.Sum(x => x.Price);
+        double total = products().Sum(x => x.Price);
         return total;
     }
 
     public List<Product> GetAllPriceRange(double min, double max)
     {
-        //1 yontem
+        // 1. Yöntem
         //List<Product> filteredProducts = new List<Product>();
 
         //foreach (Product product in products)
         //{
         //    if (product.Price >= min && product.Price <= max)
         //    {
-        //        filteredProducts.Add(product);
+        //       filteredProducts.Add(product);
         //    }
         //}
         //return filteredProducts;
 
-        // Where(lambda[Dönüş tipi : bool]) : Verilerin filtrelenmesi için kullanılır.
 
-        var filteredProducts = products.Where(x => x.Price >= min && x.Price <= max).ToList();
+        var filteredProducts = products().Where(x => x.Price <= max && x.Price >= min).ToList();
         return filteredProducts;
 
+        // Where(lambda[Dönüş tipi : bool]) : Verilerin filtrelenmesi için kullanılır.
     }
 
     public List<Product> GetAllProductNameContains(string text)
     {
-        //1 yontem
+        // 1. Yöntem
         //List<Product> filteredProducts = new List<Product>();
-        //foreach (var product in products) {
-        //    if (product.Name.Contains(text, StringComparison.CurrentCultureIgnoreCase))
-        //    {
-        //        filteredProducts.Add(product);
-        //    }
 
+        //foreach (Product product in products) 
+        //{
+        //    if (product.Name.Contains(text,StringComparison.InvariantCultureIgnoreCase))
+        //    {
+        //        filteredProducts.Add(product); 
+        //    }
         //}
         //return filteredProducts;
 
+
         // FindAll(lambda[Dönüş tipi : bool]) : Where.ToList den farkı işin sonunda sadece Liste döndürür.
-
-        var filteredProducts = products.FindAll(x => x.Name.Contains(text ,StringComparison.CurrentCultureIgnoreCase));
+        var filteredProducts = products().FindAll(x => x.Name.Contains(text));
         return filteredProducts;
-
-            
     }
 
-    public Product? GetById(int id)
+    public Product? GetById(Guid id)
     {
-        // 1.YONTEM
+        //1. Yöntem
         //Product? product = null;
-
-        //foreach(Product item in products){
-        //    if(item.Id == id)
+        //foreach (Product item in products)
+        //{
+        //    if (item.Id == id)
         //    {
         //        product = item;
         //        break;
@@ -97,7 +93,8 @@ internal class ProductData
         //}
         //return product;
 
-        Product? product = products.SingleOrDefault(x=> x.Id == id);
+        // L1 
+        Product? product = products().SingleOrDefault(x => x.Id == id);
 
         // Product? product = products.Where(x => x.Id == id).SingleOrDefault();
 
@@ -105,11 +102,14 @@ internal class ProductData
         return product;
     }
 
-    public Product Delete(int id) { 
+
+    public Product Delete(Guid id)
+    {
         Product? product = GetById(id);
 
-        if (product != null) { 
-            products.Remove(product);
+        if (product is not null)
+        {
+            products().Remove(product);
         }
         else
         {
@@ -117,51 +117,52 @@ internal class ProductData
         }
 
         return product;
-    
-    }
 
+
+
+    }
 
     public List<Product> GetAll()
     {
-        return products;
+        return products();
     }
 
-    public List<Product> GeGetAllProductsByStockRange(int min, int max)
+    public List<Product> GetAllProductsByStockRange(int min, int max)
     {
-        List<Product> filtered = products.FindAll(x => x.Stock >= min && x.Stock <= max);
+        List<Product> filtered = products().FindAll(x => x.Stock <= max && x.Stock >= min);
         return filtered;
     }
 
+
     public List<Product> GetAllProductsOrderByAscendingName()
     {
-        List<Product> orderBy = products.OrderBy(x => x.Name).ToList();
+        List<Product> orderBy = products().OrderBy(x => x.Name).ToList();
         return orderBy;
     }
 
     public List<Product> GetAllProductsOrderByDescendingName()
     {
-        List<Product> orderBy = products.OrderByDescending(x => x.Name).ToList();
+        List<Product> orderBy = products().OrderByDescending(x => x.Name).ToList();
         return orderBy;
     }
 
     public Product GetExpensiveProduct()
     {
-        Product product = products.OrderBy(product=> product.Price).LastOrDefault();
+        Product product = products().OrderBy(x => x.Price).LastOrDefault();
         return product;
-
     }
 
     public Product GetCheapProduct()
     {
-        Product product = products.OrderBy(x => x.Price).LastOrDefault();
+        Product product = products().OrderBy(x => x.Price).FirstOrDefault();
         return product;
     }
 
     public List<ProductDetailDto> GetDetails(List<Category> categories)
     {
-        var result = from p in products
+        var result = from p in products()
                      join c in categories
-                     on p.categoryId equals c.Id
+                     on p.CategoryId equals c.Id
 
 
                      select new ProductDetailDto(
@@ -178,8 +179,8 @@ internal class ProductData
     public List<ProductDetailDto> GetDetailsV2(List<Category> categories)
     {
         List<ProductDetailDto> details =
-            products.Join(categories,
-            p => p.categoryId,
+            products().Join(categories,
+            p => p.CategoryId,
             c => c.Id,
             (pr, ca) => new ProductDetailDto(
                          Id: pr.Id,
@@ -192,13 +193,13 @@ internal class ProductData
         return details;
     }
 
-    public ProductDetailDto? GetDetailById(int id, List<Category> categories)
+    public ProductDetailDto? GetDetailById(Guid id, List<Category> categories)
     {
 
-        var result = from p in products
+        var result = from p in products()
                      where p.Id == id
                      join c in categories
-                     on p.categoryId equals c.Id
+                     on p.CategoryId equals c.Id
 
                      select new ProductDetailDto(
                          Id: p.Id,
@@ -211,5 +212,16 @@ internal class ProductData
         return result.FirstOrDefault();
 
 
+    }
+
+    public List<string> GetAllProductNames()
+    {
+        List<string> productName = products().Select(x => x.Name).ToList();
+        return productName;
+    }
+
+    public Product Update(Product category)
+    {
+        throw new NotImplementedException();
     }
 }
